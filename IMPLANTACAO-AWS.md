@@ -52,13 +52,17 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
 
 ### Integrar a aplicação
 
-15. Em **Nome do grupo de usuários**, insira um nome descritivo (ex: `login-customizado-pool`)
-16. Em **Nome do cliente de aplicação**, insira um nome (ex: `login-customizado-app`)
+15. Em **Nome do grupo de usuários**, insira: `dino-login-pool`
+16. Em **Nome do cliente de aplicação**, insira: `dino-login-app-client`
 17. Em **Segredo do cliente**, selecione **Não gerar um segredo do cliente**
 18. Expanda **Configurações avançadas do cliente de aplicação** e em **Fluxos de autenticação**, marque:
     - **ALLOW_USER_SRP_AUTH**
     - **ALLOW_REFRESH_TOKEN_AUTH**
 19. Clique em **Próximo**
+
+> **Nomes sugeridos:**
+> - Grupo de usuários: `dino-login-pool`
+> - Cliente de aplicação: `dino-login-app-client`
 
 ### Revisar e criar
 
@@ -99,11 +103,13 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 4. Clique em **Criar função**
 5. Selecione **Criar do zero**
 6. Configure:
-   - **Nome da função**: `login-customizado-api`
+   - **Nome da função**: `dino-login-api`
    - **Runtime**: **Node.js 20.x**
    - **Arquitetura**: x86_64
 7. Em **Permissões**, mantenha **Criar uma nova função com permissões básicas do Lambda**
 8. Clique em **Criar função**
+
+> **Nome sugerido para a função:** `dino-login-api`
 
 ### Fazer upload do código
 
@@ -141,20 +147,24 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 2. Clique em **Criar API**
 3. Em **API REST**, clique em **Compilar**
 4. Configure:
-   - **Nome da API**: `login-customizado-api`
+   - **Nome da API**: `dino-login-api`
    - **Tipo de endpoint da API**: **Regional**
 5. Clique em **Criar API**
+
+> **Nome sugerido para a API:** `dino-login-api`
 
 ### Criar Autorizador do Cognito
 
 6. No menu lateral, clique em **Autorizadores**
 7. Clique em **Criar autorizador**
 8. Configure:
-   - **Nome do autorizador**: `CognitoAuthorizer`
+   - **Nome do autorizador**: `dino-login-cognito-authorizer`
    - **Tipo de autorizador**: **Cognito**
-   - **Grupo de usuários do Cognito**: selecione o grupo de usuários criado na Etapa 1
+   - **Grupo de usuários do Cognito**: selecione o grupo de usuários criado na Etapa 1 (`dino-login-pool`)
    - **Origem do token**: `Authorization`
 9. Clique em **Criar autorizador**
+
+> **Nome sugerido para o autorizador:** `dino-login-cognito-authorizer`
 
 ### Criar recurso /health
 
@@ -164,6 +174,8 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 13. Marque **Habilitar CORS do API Gateway**
 14. Clique em **Criar recurso**
 
+> Nome sugerido para o recurso: `health`
+
 ### Criar método GET para /health
 
 15. Com o recurso `/health` selecionado, clique em **Criar método**
@@ -171,7 +183,7 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
     - **Tipo de método**: **GET**
     - **Tipo de integração**: **Função Lambda**
     - Marque **Integração de proxy Lambda**
-    - **Função Lambda**: selecione `login-customizado-api`
+    - **Função Lambda**: selecione `dino-login-api`
 17. Clique em **Criar método**
 
 ### Criar recurso /me
@@ -181,6 +193,8 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 20. Marque **Habilitar CORS do API Gateway**
 21. Clique em **Criar recurso**
 
+> Nome sugerido para o recurso: `me`
+
 ### Criar método GET para /me (com Autorizador)
 
 22. Com o recurso `/me` selecionado, clique em **Criar método**
@@ -188,9 +202,9 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
     - **Tipo de método**: **GET**
     - **Tipo de integração**: **Função Lambda**
     - Marque **Integração de proxy Lambda**
-    - **Função Lambda**: selecione `login-customizado-api`
+    - **Função Lambda**: selecione `dino-login-api`
 24. Em **Configurações de solicitação de método**:
-    - **Autorização**: selecione **CognitoAuthorizer**
+    - **Autorização**: selecione **dino-login-cognito-authorizer**
 25. Clique em **Criar método**
 
 ### Criar recurso /game
@@ -199,12 +213,16 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 27. Em **Nome do recurso**, insira `game`
 28. Clique em **Criar recurso**
 
+> Nome sugerido para o recurso: `game`
+
 ### Criar recurso /game/status
 
 29. Com o recurso `/game` selecionado, clique em **Criar recurso**
 30. Em **Nome do recurso**, insira `status`
 31. Marque **Habilitar CORS do API Gateway**
 32. Clique em **Criar recurso**
+
+> Nome sugerido para o recurso: `status` (ficará como `/game/status`)
 
 ### Criar método GET para /game/status (com Autorizador)
 
@@ -213,9 +231,9 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
     - **Tipo de método**: **GET**
     - **Tipo de integração**: **Função Lambda**
     - Marque **Integração de proxy Lambda**
-    - **Função Lambda**: selecione `login-customizado-api`
+    - **Função Lambda**: selecione `dino-login-api`
 35. Em **Configurações de solicitação de método**:
-    - **Autorização**: selecione **CognitoAuthorizer**
+    - **Autorização**: selecione **dino-login-cognito-authorizer**
 36. Clique em **Criar método**
 
 ### Habilitar CORS
@@ -251,12 +269,14 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 1. Navegue para **Amazon S3**
 2. Clique em **Criar bucket**
 3. Configure:
-   - **Nome do bucket**: nome único (ex: `login-customizado-frontend-<SEU-ID>`)
+   - **Nome do bucket**: `dino-login-frontend-<SEU-ID>` (substitua `<SEU-ID>` por algo único, ex: seu ID de conta ou iniciais + data)
    - **Região da AWS**: **Leste dos EUA (Norte da Virgínia) us-east-1**
 4. Em **Configurações de bloqueio de acesso público para este bucket**:
    - Marque **Bloquear todo o acesso público** (mantenha todas as opções marcadas)
 5. Mantenha as demais configurações padrão
 6. Clique em **Criar bucket**
+
+> **Nome sugerido para o bucket:** `dino-login-frontend-<SEU-ID>` (o nome precisa ser globalmente único no S3)
 
 > **Importante:** O bucket deve permanecer privado. O acesso público é feito exclusivamente via CloudFront com Controle de Acesso de Origem.
 
