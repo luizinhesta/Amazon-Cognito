@@ -6,8 +6,25 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
 
 - Conta AWS ativa com permissões de administrador (ou permissões para criar recursos em Cognito, Lambda, API Gateway, S3, CloudFront, IAM)
 - Familiaridade básica com o Console AWS
-- Node.js 20.x instalado localmente (para build do projeto)
+- [Node.js](https://nodejs.org/) 20.x ou superior instalado localmente (para build do projeto)
 - AWS CLI configurada (opcional, para upload via terminal)
+
+### Instalar Node.js (Windows)
+
+O Node.js é necessário para compilar o código do frontend e do backend antes de enviar para a AWS.
+
+1. Acesse [https://nodejs.org/](https://nodejs.org/)
+2. Baixe a versão **LTS** (recomendada para a maioria dos usuários)
+3. Execute o instalador e siga os passos (aceite as opções padrão)
+4. Após a instalação, **feche e abra novamente** o PowerShell/Terminal
+5. Verifique a instalação executando:
+   ```powershell
+   node --version
+   npm --version
+   ```
+   - Ambos os comandos devem retornar um número de versão (ex: `v20.x.x` e `10.x.x`)
+
+> **⚠️ Importante:** Se o comando `npm` não for reconhecido após a instalação, reinicie o computador para que as variáveis de ambiente sejam atualizadas.
 
 ---
 
@@ -52,31 +69,38 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
 
 Após a criação, ajuste a política de senha no menu lateral:
 
-13. No menu lateral esquerdo, clique em **Segurança do grupo de usuários** (dentro da seção **Configurações**)
-14. Na seção **Política de senha**, clique em **Editar**
-15. Selecione **Personalizada** e configure:
-    - Comprimento mínimo da senha: **8**
-    - Marque: **Contém pelo menos 1 letra maiúscula**
-    - Marque: **Contém pelo menos 1 letra minúscula**
-    - Marque: **Contém pelo menos 1 número**
-    - Marque: **Contém pelo menos 1 caractere especial**
-16. Clique em **Salvar alterações**
+13. No menu lateral esquerdo, em **Autenticação**, clique em **Métodos de autenticação**
+14. Role até a seção **Política de senha** e clique em **Editar**
+15. Em **Modo de política de senha**, selecione **Personalizada**
+16. Configure:
+    - **Tamanho mínimo da senha**: 8 caractere(s)
+    - Em **Requisitos de senhas**, marque:
+      - **Contém pelo menos 1 número**
+      - **Contém pelo menos um caractere especial**
+      - **Contém pelo menos 1 letra maiúscula**
+      - **Contém pelo menos 1 letra minúscula**
+    - **As senhas temporárias definidas pelos administradores expiram em**: 7 dia(s) (manter padrão)
+17. Clique em **Salvar alterações**
 
 ### Configurar fluxos de autenticação do cliente de aplicação
 
-17. No menu lateral esquerdo, em **Aplicações**, clique em **Clientes da aplicação**
-18. Clique no cliente de aplicação criado (`dino-login-app`)
-19. Na aba **Informações do cliente de aplicação**, clique em **Editar**
-20. Em **Fluxos de autenticação**, marque:
-    - **ALLOW_USER_SRP_AUTH**
-    - **ALLOW_REFRESH_TOKEN_AUTH**
-21. Confirme que **Segredo do cliente** está como **Sem segredo do cliente**
-22. Clique em **Salvar alterações**
+18. No menu lateral esquerdo, em **Aplicações**, clique em **Clientes da aplicação**
+19. Clique no cliente de aplicação criado (`dino-login-app`)
+20. Na seção **Informações do cliente de aplicação**, clique em **Editar**
+21. Em **Nome do cliente de aplicação**, confirme que está como `dino-login-app`
+22. Em **Fluxos de autenticação**, marque:
+    - **Fazer login com senha remota segura (SRP): ALLOW_USER_SRP_AUTH**
+    - **Obter novos tokens de usuário de sessões autenticadas existentes: ALLOW_REFRESH_TOKEN_AUTH**
+    - (os demais fluxos podem ficar desmarcados)
+23. Em **Configurações avançadas de segurança**:
+    - Marque **Habilitar revogação do token**
+    - Marque **Impedir erros de existência de usuário** (retorna resposta genérica de falha para não revelar se um email está cadastrado)
+24. Clique em **Salvar alterações**
 
 ### Verificar métodos de autenticação
 
-23. No menu lateral esquerdo, em **Autenticação**, clique em **Métodos de autenticação**
-24. Confirme que a autenticação baseada em escolha está configurada com **E-mail + Senha (SRP)**
+25. No menu lateral esquerdo, em **Autenticação**, clique em **Métodos de autenticação**
+26. Confirme que a autenticação baseada em escolha está configurada com **E-mail + Senha (SRP)**
 
 ### Informações importantes para anotar
 
@@ -85,7 +109,6 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 - **Nome do grupo de usuários**: `dino-login-app`
 - **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — campo "ID do grupo de usuários" na seção "Informações do grupo de usuários"
 - **ID do cliente de aplicação** — em **Aplicações** > **Clientes da aplicação**, clique no app e copie o "ID do cliente"
-- **ID do cliente de aplicação** (formato: `xxxxxxxxxxxxxxxxxxxxxxxxxx`) — em **Integração de aplicações** > **Clientes de aplicação e análises**
 
 ---
 
@@ -93,21 +116,17 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 
 ### Preparar o código
 
-1. No diretório `backend/` do projeto, execute:
-   ```bash
+1. Abra o PowerShell e navegue até a pasta `backend/` do projeto:
+   ```powershell
+   cd C:\github\AWS-Cognito\backend
    npm install
    npm run build
    ```
-2. Crie um arquivo ZIP com o conteúdo da pasta `dist/`:
-   ```bash
-   cd dist
-   zip -r ../lambda-function.zip .
-   cd ..
-   ```
-   No Windows (PowerShell):
+2. Ainda na pasta `backend/`, crie um arquivo ZIP com o conteúdo da pasta `dist/`:
    ```powershell
-   Compress-Archive -Path dist\* -DestinationPath lambda-function.zip
+   Compress-Archive -Path C:\github\AWS-Cognito\backend\dist\* -DestinationPath C:\github\AWS-Cognito\backend\lambda-function.zip -Force
    ```
+   > **Importante:** Execute este comando a partir da pasta `backend/`, **NÃO** de dentro da pasta `dist/`. O `-Force` sobrescreve se o arquivo já existir.
 
 ### Criar a função no Console AWS
 
@@ -172,11 +191,12 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 8. Configure:
    - **Nome do autorizador**: `dino-login-cognito-authorizer`
    - **Tipo de autorizador**: **Cognito**
-   - **Grupo de usuários do Cognito**: selecione o grupo de usuários criado na Etapa 1 (`dino-login-pool`)
-   - **Origem do token**: `Authorization`
+   - **Grupo de usuários do Cognito**: selecione a região `us-east-1` e busque `dino-login-app`
+   - **Origem do token**: digite `Authorization` após o prefixo `method.request.header.` que já aparece pré-preenchido (ficando `method.request.header.Authorization`)
+   - **Validação de token - opcional**: deixe em branco
 9. Clique em **Criar autorizador**
 
-> **Nome sugerido para o autorizador:** `dino-login-cognito-authorizer`
+> **⚠️ Atenção:** No campo "Origem do token", o Console pré-preenche com `method.request.header.` — você deve digitar APENAS `Authorization` após esse prefixo. Não deixe o ponto final solto, senão dará erro.
 
 ### Criar recurso /health
 
@@ -325,30 +345,7 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 
 11. Após criar a distribuição, o CloudFront exibirá um banner informando que é necessário atualizar a política do bucket. Clique em **Copiar política**
 12. Navegue para o bucket S3 > aba **Permissões** > **Política do bucket**
-13. Clique em **Editar** e cole a política copiada. Ela terá o seguinte formato:
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowCloudFrontServicePrincipal",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "cloudfront.amazonaws.com"
-            },
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::SEU-BUCKET-NAME/*",
-            "Condition": {
-                "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudfront::SEU-ACCOUNT-ID:distribution/SEU-DISTRIBUTION-ID"
-                }
-            }
-        }
-    ]
-}
-```
-
+13. Clique em **Editar** e cole a política copiada
 14. Clique em **Salvar alterações**
 
 ### Configurar respostas de erro personalizadas (para SPA)
@@ -434,50 +431,70 @@ Esta etapa é opcional. A aplicação funciona perfeitamente com a URL padrão d
 
 ### Build do projeto
 
-1. Na raiz do projeto frontend, configure o arquivo `.env` com os valores reais:
+1. Abra o PowerShell e navegue para a raiz do projeto:
+   ```powershell
+   cd C:\github\AWS-Cognito
    ```
+
+2. Crie o arquivo `.env` a partir do template (se ainda não existir):
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+3. Edite o arquivo `.env` com os valores reais obtidos nas etapas anteriores:
+   ```env
    VITE_AWS_REGION=us-east-1
    VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
    VITE_COGNITO_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
    VITE_API_URL=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev
    ```
 
-2. Execute o build:
-   ```bash
+4. Instale as dependências e execute o build:
+   ```powershell
    npm install
    npm run build
    ```
 
+5. Após o build, a pasta `dist/` será criada com os seguintes arquivos:
+   - `index.html` — página principal
+   - `assets/` — pasta com arquivos JavaScript e CSS compilados
+   - `vite.svg` — ícone
+
+> **⚠️ Atenção:** O Vite lê o arquivo `.env` (NÃO o `.env.example`) durante o build. Se o `.env` não existir, as variáveis de ambiente ficarão como `undefined` na aplicação.
+
 ### Upload para o S3
 
-3. Via AWS CLI:
-   ```bash
-   aws s3 sync dist/ s3://SEU-BUCKET-NAME --delete
+6. Via Console AWS:
+   - Navegue para o bucket S3
+   - **Exclua** qualquer arquivo antigo que esteja no bucket
+   - Clique em **Carregar**
+   - Arraste o **conteúdo** da pasta `C:\github\AWS-Cognito\dist\` (os arquivos `index.html`, `vite.svg` e a pasta `assets/`)
+   - Clique em **Carregar**
+
+   Ou via AWS CLI (PowerShell):
+   ```powershell
+   aws s3 sync C:\github\AWS-Cognito\dist\ s3://SEU-BUCKET-NAME --delete
    ```
 
-   Ou via Console AWS:
-   - Navegue para o bucket S3
-   - Clique em **Carregar**
-   - Arraste todo o conteúdo da pasta `dist/` (não a pasta em si, mas seu conteúdo)
-   - Clique em **Carregar**
+> **⚠️ Importante:** Faça upload do conteúdo da pasta `dist/` do **frontend** (raiz do projeto). NÃO confunda com a pasta `backend/dist/` que contém o código da Lambda.
 
 ### Invalidar cache do CloudFront
 
-4. Após o upload, invalide o cache para que as alterações sejam refletidas imediatamente:
+7. Após o upload, invalide o cache para que as alterações sejam refletidas imediatamente:
 
-   Via AWS CLI:
-   ```bash
-   aws cloudfront create-invalidation --distribution-id SEU-DISTRIBUTION-ID --paths "/*"
-   ```
-
-   Ou via Console AWS:
+   Via Console AWS:
    - Navegue para a distribuição CloudFront
    - Vá para a aba **Invalidações**
    - Clique em **Criar invalidação**
    - Em **Caminhos de objeto**, insira `/*`
    - Clique em **Criar invalidação**
 
-5. Aguarde a invalidação ser concluída (status **Concluída**)
+   Ou via AWS CLI (PowerShell):
+   ```powershell
+   aws cloudfront create-invalidation --distribution-id SEU-DISTRIBUTION-ID --paths "/*"
+   ```
+
+8. Aguarde a invalidação ser concluída (status **Concluída**)
 
 ---
 
@@ -488,40 +505,79 @@ Crie um arquivo `.env` na raiz do projeto com os seguintes valores obtidos duran
 | Variável | Onde encontrar | Exemplo |
 |----------|---------------|---------|
 | `VITE_AWS_REGION` | Região do grupo de usuários | `us-east-1` |
-| `VITE_COGNITO_USER_POOL_ID` | Cognito > Grupo de usuários > Visão geral do grupo | `us-east-1_AbCdEfGhI` |
-| `VITE_COGNITO_USER_POOL_CLIENT_ID` | Cognito > Grupo de usuários > Integração de aplicações > Clientes de aplicação | `1a2b3c4d5e6f7g8h9i0j1k2l3m` |
+| `VITE_COGNITO_USER_POOL_ID` | Cognito > Grupo de usuários > Visão geral | `us-east-1_AbCdEfGhI` |
+| `VITE_COGNITO_USER_POOL_CLIENT_ID` | Cognito > Aplicações > Clientes da aplicação > ID do cliente | `1a2b3c4d5e6f7g8h9i0j1k2l3m` |
 | `VITE_API_URL` | API Gateway > Estágios > dev > URL de invocação | `https://abc123def4.execute-api.us-east-1.amazonaws.com/dev` |
 
-```env
-VITE_AWS_REGION=us-east-1
-VITE_COGNITO_USER_POOL_ID=us-east-1_AbCdEfGhI
-VITE_COGNITO_USER_POOL_CLIENT_ID=1a2b3c4d5e6f7g8h9i0j1k2l3m
-VITE_API_URL=https://abc123def4.execute-api.us-east-1.amazonaws.com/dev
-```
-
-> **Segurança:** Nunca commite o arquivo `.env` com valores reais no repositório. Use o `.env.example` como referência com valores placeholder.
+> **Segurança:** Nunca commite o arquivo `.env` com valores reais no repositório. O `.env` já está no `.gitignore`. Use o `.env.example` apenas como referência com valores placeholder.
 
 ---
 
 ## Verificação Final
 
-Após completar todas as etapas, verifique se a aplicação está funcionando:
+Após completar todas as etapas, verifique se a aplicação está funcionando corretamente.
+
+### Testar a aplicação
 
 1. Acesse a URL do CloudFront (ou domínio customizado) no navegador
-2. A página inicial deve carregar corretamente
-3. Teste o fluxo de registro:
-   - Crie uma conta com email válido
-   - Verifique o email com o código recebido
-   - Faça login com as credenciais criadas
-4. Na área autenticada, verifique se o nome e email aparecem corretamente
-5. Teste o endpoint de health: acesse `<VITE_API_URL>/health` no navegador — deve retornar `{"status":"ok","message":"API funcionando corretamente"}`
+2. A página inicial com o tema dinossauro deve carregar (botões "Entrar" e "Criar conta")
+3. Teste o **fluxo de registro**:
+   - Clique em "Criar conta"
+   - Preencha nome completo, apelido, email e senha
+   - Um código de 6 dígitos será enviado para o email informado
+   - Insira o código na tela de confirmação
+   - Após confirmar, faça login com as credenciais criadas
+4. Teste o **login**:
+   - Na tela de login, insira email e senha
+   - Após o login, o dashboard deve exibir seu nome, apelido e email
+5. Teste o **perfil**:
+   - Clique em "Meu perfil" e verifique se as informações aparecem
+   - Teste a edição de nome e apelido
+6. Teste o **logout**:
+   - Clique em "Sair" e confirme que foi redirecionado para a página inicial
+
+### Verificar usuários cadastrados no Cognito
+
+Para validar que os usuários estão sendo criados corretamente:
+
+1. No Console AWS, navegue para **Amazon Cognito**
+2. Clique no grupo de usuários (`dino-login-app`)
+3. No menu lateral, em **Gerenciamento de usuários**, clique em **Usuários**
+4. A lista de usuários cadastrados aparecerá com as seguintes informações:
+   - **Nome de usuário** (UUID gerado automaticamente)
+   - **Status da conta** (Confirmado / Não confirmado)
+   - **E-mail** do usuário
+   - **Data de criação**
+5. Clique em um usuário para ver detalhes:
+   - **Atributos do usuário**: email, name, preferred_username, email_verified
+   - **Status de confirmação**: se o email foi verificado
+
+> **Dica:** Após registrar um usuário pela aplicação, verifique nesta tela se ele aparece com status "Confirmado" e com os atributos corretos (name, preferred_username, email).
+
+### Testar o endpoint de health da API
+
+Acesse diretamente no navegador:
+```
+https://SEU-API-ID.execute-api.us-east-1.amazonaws.com/dev/health
+```
+
+Deve retornar:
+```json
+{"status":"ok","message":"API funcionando corretamente"}
+```
 
 ### Solução de Problemas
 
 | Problema | Possível causa | Solução |
 |----------|---------------|---------|
+| `npm` não é reconhecido | Node.js não instalado | Instale o Node.js (seção Pré-requisitos) e reinicie o terminal |
+| Erro no `Compress-Archive` | Executando de dentro da pasta `dist/` | Execute o comando a partir da pasta `backend/` usando caminhos completos |
 | Página em branco no CloudFront | Objeto raiz padrão não configurado | Verifique se `index.html` está definido como Objeto raiz padrão |
+| Página em branco (variáveis undefined) | Arquivo `.env` não existe | Crie o `.env` a partir do `.env.example` com valores reais e refaça o build |
 | Erro 403 ao acessar rota direta | Resposta de erro personalizada não configurada | Configure respostas para erros 403 e 404 conforme Etapa 5 |
-| Erro de CORS no console | Origem não adicionada na Lambda | Atualize `ALLOWED_ORIGINS` com a URL correta |
-| 401 na API | Token expirado ou Autorizador mal configurado | Verifique a Origem do token no Autorizador e faça login novamente |
+| Erro de CORS no console | Origem não adicionada na Lambda | Atualize `ALLOWED_ORIGINS` com a URL correta (CloudFront + domínio) |
+| 401 na API | Token expirado ou Autorizador mal configurado | Verifique se a Origem do token está como `method.request.header.Authorization` |
+| Erro "Invalid token source" no Autorizador | Campo "Origem do token" com ponto solto | Certifique-se que está `method.request.header.Authorization` (sem ponto extra) |
+| Arquivos errados no S3 | Upload do backend em vez do frontend | O S3 recebe apenas `C:\...\dist\` (index.html + assets/). O `backend\dist\` vai para a Lambda via ZIP |
 | Certificado não validando | Registros CNAME não propagados | Aguarde propagação DNS (até 48h) ou verifique registros |
+| Usuário não aparece no Cognito | Registro falhou silenciosamente | Verifique o console do navegador (F12) para erros e confirme que o Client ID está correto |
