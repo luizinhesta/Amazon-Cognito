@@ -22,9 +22,12 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
 4. Em **Tipo de aplicação**, selecione **Aplicação de página única (SPA)**
 5. Em **Dê um nome para sua aplicação**, insira: `dino-login-app`
 
+> **Nome sugerido:** `dino-login-app`
+> (este nome será usado tanto para o grupo de usuários quanto para o cliente da aplicação)
+
 ### Configurar opções
 
-6. Em **Opções para identificadores de login**, marque **E-mail**
+6. Em **Opções para identificadores de login**, marque apenas **E-mail**
    - Desmarque "Número de telefone" e "Nome de usuário" se estiverem marcados
 7. Em **Autorregistro**, marque **Habilitar autorregistro**
 8. Em **Atributos obrigatórios para a inscrição**, clique no dropdown **Selecionar atributos** e adicione:
@@ -32,28 +35,25 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
    - **preferred_username**
    - (o **email** já é incluído automaticamente por ser o identificador de login)
 
-### Adicionar um URL de retorno (opcional)
+### Adicionar um URL de retorno
 
 9. Em **URL de retorno**, insira: `http://localhost:5173`
-   - (Essa URL é usada apenas se você configurar a Hosted UI — para nosso caso com login customizado ela não será utilizada, mas é obrigatória para concluir a criação)
+   - (Essa URL é usada pela Hosted UI/Login gerenciado. Para nosso caso com login customizado ela não será utilizada diretamente, mas o campo é obrigatório para concluir a criação)
 
 ### Concluir criação
 
 10. Role até o final e clique em **Criar**
 11. Aguarde a criação do grupo de usuários e do cliente de aplicação
-
-> **Nomes sugeridos:**
-> - Nome da aplicação: `dino-login-app`
+12. Você será redirecionado para a página **Visão geral** do grupo de usuários criado
 
 ---
 
 ### Configurar a política de senha
 
-Após a criação, precisamos ajustar a política de senha:
+Após a criação, ajuste a política de senha no menu lateral:
 
-12. Acesse o grupo de usuários recém-criado
-13. Vá na aba **Segurança** > **Política de senha**
-14. Clique em **Editar**
+13. No menu lateral esquerdo, clique em **Segurança do grupo de usuários** (dentro da seção **Configurações**)
+14. Na seção **Política de senha**, clique em **Editar**
 15. Selecione **Personalizada** e configure:
     - Comprimento mínimo da senha: **8**
     - Marque: **Contém pelo menos 1 letra maiúscula**
@@ -64,20 +64,27 @@ Após a criação, precisamos ajustar a política de senha:
 
 ### Configurar fluxos de autenticação do cliente de aplicação
 
-17. Vá na aba **Integração de aplicações** > **Clientes de aplicação e análises**
+17. No menu lateral esquerdo, em **Aplicações**, clique em **Clientes da aplicação**
 18. Clique no cliente de aplicação criado (`dino-login-app`)
-19. Em **Informações do cliente de aplicação**, clique em **Editar**
+19. Na aba **Informações do cliente de aplicação**, clique em **Editar**
 20. Em **Fluxos de autenticação**, marque:
     - **ALLOW_USER_SRP_AUTH**
     - **ALLOW_REFRESH_TOKEN_AUTH**
 21. Confirme que **Segredo do cliente** está como **Sem segredo do cliente**
 22. Clique em **Salvar alterações**
 
+### Verificar métodos de autenticação
+
+23. No menu lateral esquerdo, em **Autenticação**, clique em **Métodos de autenticação**
+24. Confirme que a autenticação baseada em escolha está configurada com **E-mail + Senha (SRP)**
+
 ### Informações importantes para anotar
 
-Após a configuração, anote os seguintes valores (serão usados nas variáveis de ambiente):
+Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral), anote:
 
-- **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — visível na página de detalhes do grupo de usuários (aba **Visão geral do grupo de usuários**)
+- **Nome do grupo de usuários**: `dino-login-app`
+- **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — campo "ID do grupo de usuários" na seção "Informações do grupo de usuários"
+- **ID do cliente de aplicação** — em **Aplicações** > **Clientes da aplicação**, clique no app e copie o "ID do cliente"
 - **ID do cliente de aplicação** (formato: `xxxxxxxxxxxxxxxxxxxxxxxxxx`) — em **Integração de aplicações** > **Clientes de aplicação e análises**
 
 ---
