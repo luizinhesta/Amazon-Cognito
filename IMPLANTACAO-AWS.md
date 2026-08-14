@@ -13,63 +13,63 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
 
 ## Etapa 1: Criar Cognito User Pool
 
-1. Acesse o Console AWS e navegue para **Amazon Cognito** na região **us-east-1** (N. Virginia)
-2. Clique em **Create user pool**
+1. Acesse o Console AWS e navegue para **Amazon Cognito** na região **us-east-1** (Leste dos EUA - Virgínia do Norte)
+2. Clique em **Criar grupo de usuários**
 
 ### Configurar experiência de login
 
-3. Em **Authentication providers**, selecione **Cognito user pool**
-4. Em **Cognito user pool sign-in options**, marque **Email**
-5. Clique em **Next**
+3. Em **Provedores de autenticação**, selecione **Grupo de usuários do Cognito**
+4. Em **Opções de login do grupo de usuários do Cognito**, marque **E-mail**
+5. Clique em **Próximo**
 
 ### Configurar requisitos de segurança
 
-6. Em **Password policy**, selecione **Custom** e configure:
+6. Em **Política de senha**, selecione **Personalizada** e configure:
    - Comprimento mínimo da senha: **8**
-   - Marque: **Contains at least 1 uppercase letter**
-   - Marque: **Contains at least 1 lowercase letter**
-   - Marque: **Contains at least 1 number**
-   - Marque: **Contains at least 1 special character**
-7. Em **Multi-factor authentication**, selecione **No MFA**
-8. Clique em **Next**
+   - Marque: **Contém pelo menos 1 letra maiúscula**
+   - Marque: **Contém pelo menos 1 letra minúscula**
+   - Marque: **Contém pelo menos 1 número**
+   - Marque: **Contém pelo menos 1 caractere especial**
+7. Em **Autenticação multifator**, selecione **Sem MFA**
+8. Clique em **Próximo**
 
 ### Configurar experiência de registro
 
-9. Em **Self-service sign-up**, marque **Enable self-registration**
-10. Em **Attribute verification and user account confirmation**:
-    - Selecione **Send email message, verify email address**
-    - Em **Verifying attribute changes**, marque **Keep original attribute value active when an update is pending - Email**
-11. Em **Required attributes**, adicione os seguintes atributos obrigatórios:
+9. Em **Registro por autoatendimento**, marque **Habilitar autorregistro**
+10. Em **Verificação de atributos e confirmação de conta de usuário**:
+    - Selecione **Enviar mensagem de e-mail, verificar endereço de e-mail**
+    - Em **Verificação de alterações de atributos**, marque **Manter o valor do atributo original ativo quando uma atualização estiver pendente - E-mail**
+11. Em **Atributos obrigatórios**, adicione os seguintes atributos obrigatórios:
     - **name**
     - **email** (já selecionado por padrão)
     - **preferred_username**
-12. Clique em **Next**
+12. Clique em **Próximo**
 
 ### Configurar entrega de mensagens
 
-13. Em **Email provider**, selecione **Send email with Cognito** (para desenvolvimento)
-14. Clique em **Next**
+13. Em **Provedor de e-mail**, selecione **Enviar e-mail com o Cognito** (para desenvolvimento)
+14. Clique em **Próximo**
 
 ### Integrar a aplicação
 
-15. Em **User pool name**, insira um nome descritivo (ex: `login-customizado-pool`)
-16. Em **App client name**, insira um nome (ex: `login-customizado-app`)
-17. Em **Client secret**, selecione **Don't generate a client secret**
-18. Expanda **Advanced app client settings** e em **Authentication flows**, marque:
+15. Em **Nome do grupo de usuários**, insira um nome descritivo (ex: `login-customizado-pool`)
+16. Em **Nome do cliente de aplicação**, insira um nome (ex: `login-customizado-app`)
+17. Em **Segredo do cliente**, selecione **Não gerar um segredo do cliente**
+18. Expanda **Configurações avançadas do cliente de aplicação** e em **Fluxos de autenticação**, marque:
     - **ALLOW_USER_SRP_AUTH**
     - **ALLOW_REFRESH_TOKEN_AUTH**
-19. Clique em **Next**
+19. Clique em **Próximo**
 
 ### Revisar e criar
 
-20. Revise todas as configurações e clique em **Create user pool**
+20. Revise todas as configurações e clique em **Criar grupo de usuários**
 
 ### Informações importantes para anotar
 
 Após a criação, anote os seguintes valores (serão usados nas variáveis de ambiente):
 
-- **User Pool ID** (formato: `us-east-1_XXXXXXXXX`) — visível na página de detalhes do User Pool
-- **App Client ID** (formato: `xxxxxxxxxxxxxxxxxxxxxxxxxx`) — em **App integration** > **App clients and analytics**
+- **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — visível na página de detalhes do grupo de usuários
+- **ID do cliente de aplicação** (formato: `xxxxxxxxxxxxxxxxxxxxxxxxxx`) — em **Integração de aplicações** > **Clientes de aplicação e análises**
 
 ---
 
@@ -96,40 +96,40 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 ### Criar a função no Console AWS
 
 3. Navegue para **AWS Lambda** na região **us-east-1**
-4. Clique em **Create function**
-5. Selecione **Author from scratch**
+4. Clique em **Criar função**
+5. Selecione **Criar do zero**
 6. Configure:
-   - **Function name**: `login-customizado-api`
+   - **Nome da função**: `login-customizado-api`
    - **Runtime**: **Node.js 20.x**
-   - **Architecture**: x86_64
-7. Em **Permissions**, mantenha **Create a new role with basic Lambda permissions**
-8. Clique em **Create function**
+   - **Arquitetura**: x86_64
+7. Em **Permissões**, mantenha **Criar uma nova função com permissões básicas do Lambda**
+8. Clique em **Criar função**
 
 ### Fazer upload do código
 
-9. Na página da função, em **Code source**, clique em **Upload from** > **.zip file**
+9. Na página da função, em **Origem do código**, clique em **Fazer upload de** > **Arquivo .zip**
 10. Faça upload do arquivo `lambda-function.zip` criado anteriormente
-11. Clique em **Save**
+11. Clique em **Salvar**
 
 ### Configurar handler
 
-12. Em **Runtime settings**, clique em **Edit**
-13. Altere o **Handler** para: `index.handler`
-14. Clique em **Save**
+12. Em **Configurações de runtime**, clique em **Editar**
+13. Altere o **Manipulador** para: `index.handler`
+14. Clique em **Salvar**
 
 ### Configurar variáveis de ambiente
 
-15. Vá para a aba **Configuration** > **Environment variables**
-16. Clique em **Edit** e adicione:
-    - **Key**: `ALLOWED_ORIGINS`
-    - **Value**: `http://localhost:5173` (adicione a URL do CloudFront após criá-lo, separada por vírgula)
-17. Clique em **Save**
+15. Vá para a aba **Configuração** > **Variáveis de ambiente**
+16. Clique em **Editar** e adicione:
+    - **Chave**: `ALLOWED_ORIGINS`
+    - **Valor**: `http://localhost:5173` (adicione a URL do CloudFront após criá-lo, separada por vírgula)
+17. Clique em **Salvar**
 
 ### Configurar timeout (opcional)
 
-18. Em **Configuration** > **General configuration**, clique em **Edit**
-19. Ajuste o **Timeout** para **10 segundos** (suficiente para a aplicação)
-20. Clique em **Save**
+18. Em **Configuração** > **Configuração geral**, clique em **Editar**
+19. Ajuste o **Tempo limite** para **10 segundos** (suficiente para a aplicação)
+20. Clique em **Salvar**
 
 ---
 
@@ -138,108 +138,108 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 ### Criar a API
 
 1. Navegue para **API Gateway** na região **us-east-1**
-2. Clique em **Create API**
-3. Em **REST API**, clique em **Build**
+2. Clique em **Criar API**
+3. Em **API REST**, clique em **Compilar**
 4. Configure:
-   - **API name**: `login-customizado-api`
-   - **API endpoint type**: **Regional**
-5. Clique em **Create API**
+   - **Nome da API**: `login-customizado-api`
+   - **Tipo de endpoint da API**: **Regional**
+5. Clique em **Criar API**
 
-### Criar Authorizer do Cognito
+### Criar Autorizador do Cognito
 
-6. No menu lateral, clique em **Authorizers**
-7. Clique em **Create authorizer**
+6. No menu lateral, clique em **Autorizadores**
+7. Clique em **Criar autorizador**
 8. Configure:
-   - **Authorizer name**: `CognitoAuthorizer`
-   - **Authorizer type**: **Cognito**
-   - **Cognito user pool**: selecione o User Pool criado na Etapa 1
-   - **Token source**: `Authorization`
-9. Clique em **Create authorizer**
+   - **Nome do autorizador**: `CognitoAuthorizer`
+   - **Tipo de autorizador**: **Cognito**
+   - **Grupo de usuários do Cognito**: selecione o grupo de usuários criado na Etapa 1
+   - **Origem do token**: `Authorization`
+9. Clique em **Criar autorizador**
 
 ### Criar recurso /health
 
-10. No menu lateral, clique em **Resources**
-11. Clique em **Create resource**
-12. Em **Resource path**, mantenha `/` e em **Resource name**, insira `health`
-13. Marque **Enable API Gateway CORS**
-14. Clique em **Create resource**
+10. No menu lateral, clique em **Recursos**
+11. Clique em **Criar recurso**
+12. Em **Caminho do recurso**, mantenha `/` e em **Nome do recurso**, insira `health`
+13. Marque **Habilitar CORS do API Gateway**
+14. Clique em **Criar recurso**
 
 ### Criar método GET para /health
 
-15. Com o recurso `/health` selecionado, clique em **Create method**
+15. Com o recurso `/health` selecionado, clique em **Criar método**
 16. Configure:
-    - **Method type**: **GET**
-    - **Integration type**: **Lambda function**
-    - Marque **Lambda proxy integration**
-    - **Lambda function**: selecione `login-customizado-api`
-17. Clique em **Create method**
+    - **Tipo de método**: **GET**
+    - **Tipo de integração**: **Função Lambda**
+    - Marque **Integração de proxy Lambda**
+    - **Função Lambda**: selecione `login-customizado-api`
+17. Clique em **Criar método**
 
 ### Criar recurso /me
 
-18. Volte para o recurso raiz `/` e clique em **Create resource**
-19. Em **Resource name**, insira `me`
-20. Marque **Enable API Gateway CORS**
-21. Clique em **Create resource**
+18. Volte para o recurso raiz `/` e clique em **Criar recurso**
+19. Em **Nome do recurso**, insira `me`
+20. Marque **Habilitar CORS do API Gateway**
+21. Clique em **Criar recurso**
 
-### Criar método GET para /me (com Authorizer)
+### Criar método GET para /me (com Autorizador)
 
-22. Com o recurso `/me` selecionado, clique em **Create method**
+22. Com o recurso `/me` selecionado, clique em **Criar método**
 23. Configure:
-    - **Method type**: **GET**
-    - **Integration type**: **Lambda function**
-    - Marque **Lambda proxy integration**
-    - **Lambda function**: selecione `login-customizado-api`
-24. Em **Method request settings**:
-    - **Authorization**: selecione **CognitoAuthorizer**
-25. Clique em **Create method**
+    - **Tipo de método**: **GET**
+    - **Tipo de integração**: **Função Lambda**
+    - Marque **Integração de proxy Lambda**
+    - **Função Lambda**: selecione `login-customizado-api`
+24. Em **Configurações de solicitação de método**:
+    - **Autorização**: selecione **CognitoAuthorizer**
+25. Clique em **Criar método**
 
 ### Criar recurso /game
 
-26. Volte para o recurso raiz `/` e clique em **Create resource**
-27. Em **Resource name**, insira `game`
-28. Clique em **Create resource**
+26. Volte para o recurso raiz `/` e clique em **Criar recurso**
+27. Em **Nome do recurso**, insira `game`
+28. Clique em **Criar recurso**
 
 ### Criar recurso /game/status
 
-29. Com o recurso `/game` selecionado, clique em **Create resource**
-30. Em **Resource name**, insira `status`
-31. Marque **Enable API Gateway CORS**
-32. Clique em **Create resource**
+29. Com o recurso `/game` selecionado, clique em **Criar recurso**
+30. Em **Nome do recurso**, insira `status`
+31. Marque **Habilitar CORS do API Gateway**
+32. Clique em **Criar recurso**
 
-### Criar método GET para /game/status (com Authorizer)
+### Criar método GET para /game/status (com Autorizador)
 
-33. Com o recurso `/game/status` selecionado, clique em **Create method**
+33. Com o recurso `/game/status` selecionado, clique em **Criar método**
 34. Configure:
-    - **Method type**: **GET**
-    - **Integration type**: **Lambda function**
-    - Marque **Lambda proxy integration**
-    - **Lambda function**: selecione `login-customizado-api`
-35. Em **Method request settings**:
-    - **Authorization**: selecione **CognitoAuthorizer**
-36. Clique em **Create method**
+    - **Tipo de método**: **GET**
+    - **Tipo de integração**: **Função Lambda**
+    - Marque **Integração de proxy Lambda**
+    - **Função Lambda**: selecione `login-customizado-api`
+35. Em **Configurações de solicitação de método**:
+    - **Autorização**: selecione **CognitoAuthorizer**
+36. Clique em **Criar método**
 
 ### Habilitar CORS
 
-> **Nota:** Se você marcou "Enable API Gateway CORS" ao criar os recursos, os métodos OPTIONS já foram criados automaticamente. Caso contrário, siga os passos abaixo para cada recurso.
+> **Nota:** Se você marcou "Habilitar CORS do API Gateway" ao criar os recursos, os métodos OPTIONS já foram criados automaticamente. Caso contrário, siga os passos abaixo para cada recurso.
 
 37. Para cada recurso (`/health`, `/me`, `/game/status`), caso o CORS não tenha sido configurado automaticamente:
     - Selecione o recurso
-    - Clique em **Enable CORS**
+    - Clique em **Habilitar CORS**
     - Em **Access-Control-Allow-Headers**: `Authorization,Content-Type`
     - Em **Access-Control-Allow-Methods**: `GET,OPTIONS`
     - Em **Access-Control-Allow-Origin**: `*` (a Lambda gerencia origens específicas)
-    - Clique em **Save**
+    - Clique em **Salvar**
 
-### Deploy da API
+### Implantar a API
 
-38. Clique em **Deploy API**
-39. Em **Stage**, selecione **New stage**
-40. Em **Stage name**, insira `dev`
-41. Clique em **Deploy**
+38. Clique em **Implantar API**
+39. Em **Estágio**, selecione **Novo estágio**
+40. Em **Nome do estágio**, insira `dev`
+41. Clique em **Implantar**
 
 ### Anotar URL da API
 
-42. Após o deploy, anote a **Invoke URL** exibida (formato: `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev`)
+42. Após a implantação, anote a **URL de invocação** exibida (formato: `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev`)
     - Esta URL será usada na variável de ambiente `VITE_API_URL` do frontend
 
 ---
@@ -249,16 +249,16 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 ### Criar o bucket
 
 1. Navegue para **Amazon S3**
-2. Clique em **Create bucket**
+2. Clique em **Criar bucket**
 3. Configure:
-   - **Bucket name**: nome único (ex: `login-customizado-frontend-<SEU-ID>`)
-   - **AWS Region**: **us-east-1**
-4. Em **Block Public Access settings for this bucket**:
-   - Marque **Block all public access** (mantenha todas as opções marcadas)
+   - **Nome do bucket**: nome único (ex: `login-customizado-frontend-<SEU-ID>`)
+   - **Região da AWS**: **Leste dos EUA (Norte da Virgínia) us-east-1**
+4. Em **Configurações de bloqueio de acesso público para este bucket**:
+   - Marque **Bloquear todo o acesso público** (mantenha todas as opções marcadas)
 5. Mantenha as demais configurações padrão
-6. Clique em **Create bucket**
+6. Clique em **Criar bucket**
 
-> **Importante:** O bucket deve permanecer privado. O acesso público é feito exclusivamente via CloudFront com Origin Access Control.
+> **Importante:** O bucket deve permanecer privado. O acesso público é feito exclusivamente via CloudFront com Controle de Acesso de Origem.
 
 ---
 
@@ -267,33 +267,33 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 ### Criar distribuição
 
 1. Navegue para **Amazon CloudFront**
-2. Clique em **Create distribution**
+2. Clique em **Criar distribuição**
 
 ### Configurar origem
 
-3. Em **Origin domain**, selecione o bucket S3 criado na Etapa 4
-4. Em **Origin access**:
-   - Selecione **Origin access control settings (recommended)**
-   - Clique em **Create new OAC**
-   - Mantenha as configurações padrão e clique em **Create**
+3. Em **Domínio de origem**, selecione o bucket S3 criado na Etapa 4
+4. Em **Acesso à origem**:
+   - Selecione **Configurações de controle de acesso de origem (recomendado)**
+   - Clique em **Criar novo OAC**
+   - Mantenha as configurações padrão e clique em **Criar**
 
 ### Configurar comportamento padrão
 
-5. Em **Viewer protocol policy**, selecione **Redirect HTTP to HTTPS**
-6. Em **Allowed HTTP methods**, selecione **GET, HEAD**
-7. Em **Cache policy**, selecione **CachingOptimized** (ou mantenha o padrão)
+5. Em **Política de protocolo do visualizador**, selecione **Redirecionar HTTP para HTTPS**
+6. Em **Métodos HTTP permitidos**, selecione **GET, HEAD**
+7. Em **Política de cache**, selecione **CachingOptimized** (ou mantenha o padrão)
 
 ### Configurações gerais
 
-8. Em **Default root object**, insira `index.html`
+8. Em **Objeto raiz padrão**, insira `index.html`
 9. Mantenha as demais configurações padrão
-10. Clique em **Create distribution**
+10. Clique em **Criar distribuição**
 
-### Atualizar Bucket Policy do S3
+### Atualizar política do bucket S3
 
-11. Após criar a distribuição, o CloudFront exibirá um banner informando que é necessário atualizar a bucket policy. Clique em **Copy policy**
-12. Navegue para o bucket S3 > aba **Permissions** > **Bucket policy**
-13. Clique em **Edit** e cole a policy copiada. Ela terá o seguinte formato:
+11. Após criar a distribuição, o CloudFront exibirá um banner informando que é necessário atualizar a política do bucket. Clique em **Copiar política**
+12. Navegue para o bucket S3 > aba **Permissões** > **Política do bucket**
+13. Clique em **Editar** e cole a política copiada. Ela terá o seguinte formato:
 
 ```json
 {
@@ -317,31 +317,31 @@ Após a criação, anote os seguintes valores (serão usados nas variáveis de a
 }
 ```
 
-14. Clique em **Save changes**
+14. Clique em **Salvar alterações**
 
-### Configurar Custom Error Responses (para SPA)
+### Configurar respostas de erro personalizadas (para SPA)
 
-15. Na distribuição CloudFront, vá para a aba **Error pages**
-16. Clique em **Create custom error response**
+15. Na distribuição CloudFront, vá para a aba **Páginas de erro**
+16. Clique em **Criar resposta de erro personalizada**
 17. Configure para erro 403:
-    - **HTTP error code**: 403
-    - **Customize error response**: Yes
-    - **Response page path**: `/index.html`
-    - **HTTP response code**: 200
-18. Clique em **Create custom error response**
+    - **Código de erro HTTP**: 403
+    - **Personalizar resposta de erro**: Sim
+    - **Caminho da página de resposta**: `/index.html`
+    - **Código de resposta HTTP**: 200
+18. Clique em **Criar resposta de erro personalizada**
 19. Repita para erro 404:
-    - **HTTP error code**: 404
-    - **Customize error response**: Yes
-    - **Response page path**: `/index.html`
-    - **HTTP response code**: 200
-20. Clique em **Create custom error response**
+    - **Código de erro HTTP**: 404
+    - **Personalizar resposta de erro**: Sim
+    - **Caminho da página de resposta**: `/index.html`
+    - **Código de resposta HTTP**: 200
+20. Clique em **Criar resposta de erro personalizada**
 
 > **Nota:** Essas configurações permitem que o React Router funcione corretamente quando rotas são acessadas diretamente pela URL do navegador.
 
 ### Anotar URL do CloudFront
 
-21. Aguarde o status da distribuição mudar para **Deployed** (pode levar alguns minutos)
-22. Anote o **Distribution domain name** (formato: `https://dxxxxxxxxxx.cloudfront.net`)
+21. Aguarde o status da distribuição mudar para **Implantado** (pode levar alguns minutos)
+22. Anote o **Nome de domínio da distribuição** (formato: `https://dxxxxxxxxxx.cloudfront.net`)
     - Esta URL é onde a aplicação estará acessível
 
 ### Atualizar origens CORS da Lambda
@@ -360,34 +360,34 @@ Esta etapa é opcional. A aplicação funciona perfeitamente com a URL padrão d
 ### Solicitar certificado ACM
 
 1. Navegue para **AWS Certificate Manager (ACM)** na região **us-east-1** (obrigatório para CloudFront)
-2. Clique em **Request a certificate**
-3. Selecione **Request a public certificate** e clique em **Next**
-4. Em **Fully qualified domain name**, insira seu domínio (ex: `app.seudominio.com.br`)
-5. Em **Validation method**, selecione **DNS validation**
-6. Clique em **Request**
+2. Clique em **Solicitar um certificado**
+3. Selecione **Solicitar um certificado público** e clique em **Próximo**
+4. Em **Nome de domínio totalmente qualificado**, insira seu domínio (ex: `app.seudominio.com.br`)
+5. Em **Método de validação**, selecione **Validação de DNS**
+6. Clique em **Solicitar**
 7. Na página do certificado, anote os registros CNAME para validação DNS
 8. Adicione os registros CNAME no seu provedor de DNS (ou Route 53)
-9. Aguarde o status mudar para **Issued** (pode levar até 30 minutos)
+9. Aguarde o status mudar para **Emitido** (pode levar até 30 minutos)
 
 ### Configurar domínio alternativo no CloudFront
 
-10. Na distribuição CloudFront, clique em **Edit** nas configurações gerais
-11. Em **Alternate domain name (CNAME)**, clique em **Add item** e insira seu domínio (ex: `app.seudominio.com.br`)
-12. Em **Custom SSL certificate**, selecione o certificado ACM criado acima
-13. Clique em **Save changes**
+10. Na distribuição CloudFront, clique em **Editar** nas configurações gerais
+11. Em **Nome de domínio alternativo (CNAME)**, clique em **Adicionar item** e insira seu domínio (ex: `app.seudominio.com.br`)
+12. Em **Certificado SSL personalizado**, selecione o certificado ACM criado acima
+13. Clique em **Salvar alterações**
 
 ### Configurar registro DNS no Route 53
 
-14. Navegue para **Route 53** > **Hosted zones**
-15. Selecione a hosted zone do seu domínio
-16. Clique em **Create record**
+14. Navegue para **Route 53** > **Zonas hospedadas**
+15. Selecione a zona hospedada do seu domínio
+16. Clique em **Criar registro**
 17. Configure:
-    - **Record name**: subdomínio desejado (ex: `app`)
-    - **Record type**: **A**
+    - **Nome do registro**: subdomínio desejado (ex: `app`)
+    - **Tipo de registro**: **A**
     - Marque **Alias**
-    - **Route traffic to**: **Alias to CloudFront distribution**
+    - **Rotear tráfego para**: **Alias para distribuição do CloudFront**
     - Selecione a distribuição CloudFront
-18. Clique em **Create records**
+18. Clique em **Criar registros**
 
 ### Atualizar origens CORS
 
@@ -425,9 +425,9 @@ Esta etapa é opcional. A aplicação funciona perfeitamente com a URL padrão d
 
    Ou via Console AWS:
    - Navegue para o bucket S3
-   - Clique em **Upload**
+   - Clique em **Carregar**
    - Arraste todo o conteúdo da pasta `dist/` (não a pasta em si, mas seu conteúdo)
-   - Clique em **Upload**
+   - Clique em **Carregar**
 
 ### Invalidar cache do CloudFront
 
@@ -440,12 +440,12 @@ Esta etapa é opcional. A aplicação funciona perfeitamente com a URL padrão d
 
    Ou via Console AWS:
    - Navegue para a distribuição CloudFront
-   - Vá para a aba **Invalidations**
-   - Clique em **Create invalidation**
-   - Em **Object paths**, insira `/*`
-   - Clique em **Create invalidation**
+   - Vá para a aba **Invalidações**
+   - Clique em **Criar invalidação**
+   - Em **Caminhos de objeto**, insira `/*`
+   - Clique em **Criar invalidação**
 
-5. Aguarde a invalidação ser concluída (status **Completed**)
+5. Aguarde a invalidação ser concluída (status **Concluída**)
 
 ---
 
@@ -455,10 +455,10 @@ Crie um arquivo `.env` na raiz do projeto com os seguintes valores obtidos duran
 
 | Variável | Onde encontrar | Exemplo |
 |----------|---------------|---------|
-| `VITE_AWS_REGION` | Região do User Pool | `us-east-1` |
-| `VITE_COGNITO_USER_POOL_ID` | Cognito > User Pool > User pool overview | `us-east-1_AbCdEfGhI` |
-| `VITE_COGNITO_USER_POOL_CLIENT_ID` | Cognito > User Pool > App integration > App clients | `1a2b3c4d5e6f7g8h9i0j1k2l3m` |
-| `VITE_API_URL` | API Gateway > Stages > dev > Invoke URL | `https://abc123def4.execute-api.us-east-1.amazonaws.com/dev` |
+| `VITE_AWS_REGION` | Região do grupo de usuários | `us-east-1` |
+| `VITE_COGNITO_USER_POOL_ID` | Cognito > Grupo de usuários > Visão geral do grupo | `us-east-1_AbCdEfGhI` |
+| `VITE_COGNITO_USER_POOL_CLIENT_ID` | Cognito > Grupo de usuários > Integração de aplicações > Clientes de aplicação | `1a2b3c4d5e6f7g8h9i0j1k2l3m` |
+| `VITE_API_URL` | API Gateway > Estágios > dev > URL de invocação | `https://abc123def4.execute-api.us-east-1.amazonaws.com/dev` |
 
 ```env
 VITE_AWS_REGION=us-east-1
@@ -484,12 +484,12 @@ Após completar todas as etapas, verifique se a aplicação está funcionando:
 4. Na área autenticada, verifique se o nome e email aparecem corretamente
 5. Teste o endpoint de health: acesse `<VITE_API_URL>/health` no navegador — deve retornar `{"status":"ok","message":"API funcionando corretamente"}`
 
-### Troubleshooting
+### Solução de Problemas
 
 | Problema | Possível causa | Solução |
 |----------|---------------|---------|
-| Página em branco no CloudFront | Default root object não configurado | Verifique se `index.html` está definido como Default Root Object |
-| Erro 403 ao acessar rota direta | Custom Error Response não configurado | Configure respostas para erros 403 e 404 conforme Etapa 5 |
-| CORS error no console | Origem não adicionada na Lambda | Atualize `ALLOWED_ORIGINS` com a URL correta |
-| 401 na API | Token expirado ou Authorizer mal configurado | Verifique Token source no Authorizer e faça login novamente |
+| Página em branco no CloudFront | Objeto raiz padrão não configurado | Verifique se `index.html` está definido como Objeto raiz padrão |
+| Erro 403 ao acessar rota direta | Resposta de erro personalizada não configurada | Configure respostas para erros 403 e 404 conforme Etapa 5 |
+| Erro de CORS no console | Origem não adicionada na Lambda | Atualize `ALLOWED_ORIGINS` com a URL correta |
+| 401 na API | Token expirado ou Autorizador mal configurado | Verifique a Origem do token no Autorizador e faça login novamente |
 | Certificado não validando | Registros CNAME não propagados | Aguarde propagação DNS (até 48h) ou verifique registros |
