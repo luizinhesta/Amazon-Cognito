@@ -14,65 +14,70 @@ Guia passo a passo para configuração manual dos serviços AWS necessários par
 ## Etapa 1: Criar Cognito User Pool
 
 1. Acesse o Console AWS e navegue para **Amazon Cognito** na região **us-east-1** (Leste dos EUA - Virgínia do Norte)
-2. Clique em **Criar grupo de usuários**
+2. No menu lateral, clique em **Grupos de usuários**
+3. Clique em **Criar grupo de usuários**
 
-### Configurar experiência de login
+### Definir a aplicação
 
-3. Em **Provedores de autenticação**, selecione **Grupo de usuários do Cognito**
-4. Em **Opções de login do grupo de usuários do Cognito**, marque **E-mail**
-5. Clique em **Próximo**
+4. Em **Tipo de aplicação**, selecione **Aplicação de página única (SPA)**
+5. Em **Dê um nome para sua aplicação**, insira: `dino-login-app`
 
-### Configurar requisitos de segurança
+### Configurar opções
 
-6. Em **Política de senha**, selecione **Personalizada** e configure:
-   - Comprimento mínimo da senha: **8**
-   - Marque: **Contém pelo menos 1 letra maiúscula**
-   - Marque: **Contém pelo menos 1 letra minúscula**
-   - Marque: **Contém pelo menos 1 número**
-   - Marque: **Contém pelo menos 1 caractere especial**
-7. Em **Autenticação multifator**, selecione **Sem MFA**
-8. Clique em **Próximo**
+6. Em **Opções para identificadores de login**, marque **E-mail**
+   - Desmarque "Número de telefone" e "Nome de usuário" se estiverem marcados
+7. Em **Autorregistro**, marque **Habilitar autorregistro**
+8. Em **Atributos obrigatórios para a inscrição**, clique no dropdown **Selecionar atributos** e adicione:
+   - **name**
+   - **preferred_username**
+   - (o **email** já é incluído automaticamente por ser o identificador de login)
 
-### Configurar experiência de registro
+### Adicionar um URL de retorno (opcional)
 
-9. Em **Registro por autoatendimento**, marque **Habilitar autorregistro**
-10. Em **Verificação de atributos e confirmação de conta de usuário**:
-    - Selecione **Enviar mensagem de e-mail, verificar endereço de e-mail**
-    - Em **Verificação de alterações de atributos**, marque **Manter o valor do atributo original ativo quando uma atualização estiver pendente - E-mail**
-11. Em **Atributos obrigatórios**, adicione os seguintes atributos obrigatórios:
-    - **name**
-    - **email** (já selecionado por padrão)
-    - **preferred_username**
-12. Clique em **Próximo**
+9. Em **URL de retorno**, insira: `http://localhost:5173`
+   - (Essa URL é usada apenas se você configurar a Hosted UI — para nosso caso com login customizado ela não será utilizada, mas é obrigatória para concluir a criação)
 
-### Configurar entrega de mensagens
+### Concluir criação
 
-13. Em **Provedor de e-mail**, selecione **Enviar e-mail com o Cognito** (para desenvolvimento)
-14. Clique em **Próximo**
-
-### Integrar a aplicação
-
-15. Em **Nome do grupo de usuários**, insira: `dino-login-pool`
-16. Em **Nome do cliente de aplicação**, insira: `dino-login-app-client`
-17. Em **Segredo do cliente**, selecione **Não gerar um segredo do cliente**
-18. Expanda **Configurações avançadas do cliente de aplicação** e em **Fluxos de autenticação**, marque:
-    - **ALLOW_USER_SRP_AUTH**
-    - **ALLOW_REFRESH_TOKEN_AUTH**
-19. Clique em **Próximo**
+10. Role até o final e clique em **Criar**
+11. Aguarde a criação do grupo de usuários e do cliente de aplicação
 
 > **Nomes sugeridos:**
-> - Grupo de usuários: `dino-login-pool`
-> - Cliente de aplicação: `dino-login-app-client`
+> - Nome da aplicação: `dino-login-app`
 
-### Revisar e criar
+---
 
-20. Revise todas as configurações e clique em **Criar grupo de usuários**
+### Configurar a política de senha
+
+Após a criação, precisamos ajustar a política de senha:
+
+12. Acesse o grupo de usuários recém-criado
+13. Vá na aba **Segurança** > **Política de senha**
+14. Clique em **Editar**
+15. Selecione **Personalizada** e configure:
+    - Comprimento mínimo da senha: **8**
+    - Marque: **Contém pelo menos 1 letra maiúscula**
+    - Marque: **Contém pelo menos 1 letra minúscula**
+    - Marque: **Contém pelo menos 1 número**
+    - Marque: **Contém pelo menos 1 caractere especial**
+16. Clique em **Salvar alterações**
+
+### Configurar fluxos de autenticação do cliente de aplicação
+
+17. Vá na aba **Integração de aplicações** > **Clientes de aplicação e análises**
+18. Clique no cliente de aplicação criado (`dino-login-app`)
+19. Em **Informações do cliente de aplicação**, clique em **Editar**
+20. Em **Fluxos de autenticação**, marque:
+    - **ALLOW_USER_SRP_AUTH**
+    - **ALLOW_REFRESH_TOKEN_AUTH**
+21. Confirme que **Segredo do cliente** está como **Sem segredo do cliente**
+22. Clique em **Salvar alterações**
 
 ### Informações importantes para anotar
 
-Após a criação, anote os seguintes valores (serão usados nas variáveis de ambiente):
+Após a configuração, anote os seguintes valores (serão usados nas variáveis de ambiente):
 
-- **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — visível na página de detalhes do grupo de usuários
+- **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — visível na página de detalhes do grupo de usuários (aba **Visão geral do grupo de usuários**)
 - **ID do cliente de aplicação** (formato: `xxxxxxxxxxxxxxxxxxxxxxxxxx`) — em **Integração de aplicações** > **Clientes de aplicação e análises**
 
 ---
