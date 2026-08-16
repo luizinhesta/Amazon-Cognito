@@ -1,144 +1,131 @@
-# Arquitetura do Projeto - Login Personalizado com Amazon Cognito
+# Arquitetura Detalhada — Dino Login com Amazon Cognito
 
-## Visão Geral da Arquitetura
-
-Esta aplicação implementa um sistema de autenticação customizado utilizando Amazon Cognito, sem depender da Hosted UI ou Managed Login. A arquitetura segue o modelo serverless da AWS, com frontend React hospedado em S3/CloudFront, autenticação gerenciada pelo Cognito User Pool, e backend composto por API Gateway REST com Lambda monolítica.
-
-A comunicação entre os componentes é feita via HTTPS, com tokens JWT (ID Token) emitidos pelo Cognito sendo utilizados para autorizar requisições à API.
+> Este documento complementa o [README.md](./README.md) com detalhes técnicos aprofundados: configurações específicas dos serviços, decisões de design justificadas e fluxos de sequência completos.
 
 ---
 
-## Componentes do Sistema
+## Componentes do Sistema (Detalhamento Técnico)
 
 ### Aplicação Frontend (React + TypeScript + Vite)
 
-Aplicação single-page (SPA) construída com React 18, TypeScript e Vite como bundler. Responsável por toda a interface do usuário, incluindo telas de login, registro, confirmação de email, recuperação de senha, área autenticada e perfil. Utiliza CSS Modules para estilização com escopo local e React Router v6 para navegação client-side.
+Aplicação single-page (SPA) responsável por toda a interface do usuário. Detalhes de configuração:
 
-- **Build tool:** Vite (desenvolvimento rápido com HMR)
-- **Linguagem:** TypeScript (tipagem estática)
-- **Roteamento:** React Router v6 (rotas públicas e privadas)
-- **Estado global:** React Context + useReducer (estado de autenticação)
+- **Build tool:** Vite com HMR (Hot Module Replacement) para desenvolvimento rápido
+- **Linguagem:** TypeScript com strict mode habilitado
+- **Roteamento:** React Router v6 (rotas públicas via `PublicRoute` e protegidas via `PrivateRoute`)
+- **Estado global:** React Context + useReducer para gerenciar estado de autenticação
+- **Estilização:** CSS Modules com escopo local (sem conflitos de classe entre componentes)
+- **Testes:** Vitest configurado com setup customizado (`src/test/setup.ts`)
 
 ### Serviço de Autenticação (AWS Amplify Auth v6)
 
-Módulo que encapsula a comunicação com o Cognito User Pool utilizando a biblioteca oficial AWS Amplify Auth (v6). Gerencia automaticamente o armazenamento e renovação de tokens JWT, abstrai as chamadas SRP (Secure Remote Password) e expõe uma API simplificada para operações de autenticação.
+Módulo `authService.ts` que encapsula a comunicação com o Cognito User Pool:
 
-- **Protocolo:** SRP (Secure Remote Password)
+- **Protocolo:** SRP (Secure Remote Password) — a senha nunca trafega em texto plano
 - **Tokens gerenciados:** ID Token, Access Token, Refresh Token
-- **Armazenamento:** Mecanismo padrão do Amplify (sem acesso manual a cookies/localStorage)
+- **Armazenamento:** Mecanismo interno do Amplify (sem manipulação manual de cookies/localStorage)
+- **Renovação:** Refresh Token usado automaticamente para renovar tokens expirados
+- **Operações expostas:** signIn, signUp, confirmSignUp, signOut, resetPassword, confirmResetPassword, updatePassword, fetchUserAttributes, updateUserAttributes
 
 ### API Gateway REST (Regional, us-east-1)
 
-API Gateway do tipo REST API, implantada como Regional na região us-east-1. Expõe endpoints para o backend e utiliza Cognito User Pool Authorizer para validar tokens JWT nas rotas protegidas. Configurada com integração Lambda Proxy e suporte a CORS.
-
-- **Tipo:** REST API (Regional)
-- **Stage:** dev
-- **Autorização:** Cognito User Pool Authorizer
-- **Integração:** Lambda Proxy (evento completo repassado à Lambda)
-- **CORS:** Configurado para localhost:5173 e domínio CloudFront
+- **Tipo:** REST API (Regional) — não é HTTP API
+- **Stage:** `dev`
+- **Autorização:** Cognito User Pool Authorizer (valida ID Token)
+- **Integração:** Lambda Proxy (evento completo repassado, incluindo headers, body, pathParameters)
+- **CORS:** Configurado para aceitar `localhost:5173` (dev) e domínio CloudFront (produção)
+- **Rotas:**
+  - `GET /health` — pública (sem authorizer)
+  - `GET /me` — protegida (requer JWT)
+  - `GET /game/status` — protegida (requer JWT)
 
 ### Função Lambda (Node.js + TypeScript, monolítica)
 
-Função AWS Lambda única que processa todas as rotas da API. Implementada em Node.js com TypeScript, utiliza roteamento interno baseado no método HTTP e path do evento. Segue o princípio do menor privilégio nas permissões IAM.
+- **Runtime:** Node.js (TypeScript compilado para JS antes do deploy)
+- **Padrão:** Monolítica — uma Lambda única com roteamento interno baseado em `httpMethod` + `path`
+- **Permissões IAM:** Apenas CloudWatch Logs (princípio do menor privilégio)
+- **Segurança:**
+  - Logs sanitizados via `logger.ts` (mascara dados sensíveis)
+  - Respostas de erro genéricas (sem stack traces expostos)
+  - Validação de origens CORS via `cors.ts`
+- **Deploy:** ZIP uploadado diretamente no console Lambda
 
-- **Runtime:** Node.js (TypeScript compilado)
-- **Padrão:** Monolítica (uma Lambda para todos os endpoints)
-- **Endpoints:** GET /health, GET /me, GET /game/status
-- **Segurança:** Logs sanitizados (sem dados sensíveis), respostas de erro genéricas
-
-### Cognito User Pool (Gerenciamento de Usuários)
-
-Serviço AWS que gerencia o ciclo de vida dos usuários: registro, verificação de email, autenticação, recuperação de senha e gerenciamento de atributos. Configurado com email como alias de login e política de senha rigorosa.
+### Cognito User Pool (Configuração)
 
 - **Região:** us-east-1
-- **Login:** Email como alias
-- **Verificação:** Código numérico por email
-- **Atributos:** name, email, preferred_username
-- **Política de senha:** Mínimo 8 caracteres, maiúscula, minúscula, número e caractere especial
-- **App Client:** Sem client secret, fluxos ALLOW_USER_SRP_AUTH e ALLOW_REFRESH_TOKEN_AUTH
+- **Login:** Email como alias (não username)
+- **Verificação:** Código numérico de 6 dígitos enviado por email
+- **Atributos obrigatórios:** name, email
+- **Atributos adicionais:** preferred_username
+- **Política de senha:** Mínimo 8 caracteres, exige maiúscula, minúscula, número e caractere especial
+- **App Client:** Sem client secret, fluxos habilitados: `ALLOW_USER_SRP_AUTH`, `ALLOW_REFRESH_TOKEN_AUTH`
+- **Prevenção de enumeração:** Habilitada (não revela se email existe)
 
-### Bucket S3 (Hospedagem Estática Privada)
+### Bucket S3 (Configuração)
 
-Bucket S3 com todo acesso público bloqueado ("Block all public access"). Armazena os arquivos estáticos do frontend (HTML, CSS, JS, assets). Acessível exclusivamente através da distribuição CloudFront via Origin Access Control (OAC).
+- **Block all public access:** Habilitado (todas as 4 opções marcadas)
+- **Bucket Policy:** Permite `s3:GetObject` apenas para o CloudFront via OAC
+- **Conteúdo:** Pasta `dist/` gerada pelo `npm run build` do Vite
+- **Versionamento:** Não habilitado (deploy substitui arquivos)
 
-- **Acesso público:** Totalmente bloqueado
-- **Bucket Policy:** Permite acesso apenas da distribuição CloudFront
-- **Conteúdo:** Build de produção do Vite (dist/)
+### Distribuição CloudFront (Configuração)
 
-### Distribuição CloudFront (HTTPS, OAC)
-
-CDN da AWS que serve o frontend via HTTPS com baixa latência. Utiliza Origin Access Control para acessar o bucket S3 de forma segura. Configurada com Custom Error Response para suportar roteamento client-side do React (SPA).
-
-- **Protocolo:** Redirect HTTP to HTTPS
-- **Acesso ao S3:** Origin Access Control (OAC)
-- **Default Root Object:** index.html
-- **Custom Error Response:** 403/404 → index.html (status 200) para suportar React Router
-- **Domínio:** URL padrão do CloudFront (domínio customizado opcional)
-
----
-
-## Diagrama de Arquitetura
-
-```mermaid
-graph TB
-    subgraph "Cliente"
-        Browser[Navegador]
-    end
-    subgraph "AWS - Frontend Hosting"
-        CF[CloudFront Distribution]
-        S3[S3 Bucket Privado]
-    end
-    subgraph "AWS - Autenticação"
-        Cognito[Cognito User Pool]
-        AppClient[App Client - sem secret]
-    end
-    subgraph "AWS - Backend"
-        APIGW[API Gateway REST - Regional]
-        Authorizer[Cognito User Pool Authorizer]
-        Lambda[Lambda Function - Node.js/TS]
-    end
-    Browser -->|HTTPS| CF
-    CF -->|OAC| S3
-    Browser -->|Amplify Auth SDK| Cognito
-    Cognito --- AppClient
-    Browser -->|REST + JWT| APIGW
-    APIGW --> Authorizer
-    Authorizer -->|Valida Token| Cognito
-    APIGW -->|Lambda Proxy| Lambda
-```
-
-### Descrição das Conexões
-
-| Origem | Destino | Protocolo/Mecanismo | Descrição |
-|--------|---------|---------------------|-----------|
-| Navegador | CloudFront | HTTPS | Acesso à aplicação frontend |
-| CloudFront | S3 | OAC (Origin Access Control) | Busca dos arquivos estáticos |
-| Navegador | Cognito | Amplify Auth SDK (HTTPS) | Operações de autenticação (SRP) |
-| Cognito | App Client | Interno | Configuração do cliente de aplicação |
-| Navegador | API Gateway | REST + JWT (HTTPS) | Chamadas à API com token de autorização |
-| API Gateway | Authorizer | Interno | Validação do token JWT |
-| Authorizer | Cognito | Interno | Verificação de assinatura e expiração do token |
-| API Gateway | Lambda | Lambda Proxy | Repasse do evento completo para processamento |
+- **Viewer Protocol Policy:** Redirect HTTP to HTTPS
+- **Origin Access:** Origin Access Control (OAC) — substitui o antigo OAI
+- **Default Root Object:** `index.html`
+- **Custom Error Responses:**
+  - 403 → `/index.html` com status 200 (suporte ao React Router)
+  - 404 → `/index.html` com status 200 (suporte ao React Router)
+- **Cache:** Política padrão do CloudFront (TTL configurável)
+- **Domínio:** URL padrão `dXXXXXX.cloudfront.net` (domínio customizado via Route 53 + ACM é opcional)
 
 ---
 
-## Fluxo de Autenticação
+## Decisões de Design
 
-O fluxo de autenticação utiliza o protocolo SRP (Secure Remote Password), que permite autenticar o usuário sem transmitir a senha em texto plano pela rede. O Amplify Auth abstrai toda a complexidade do SRP, expondo uma API simples de `signIn`.
+| Decisão | Escolha | Justificativa |
+|---------|---------|---------------|
+| Framework Frontend | React 18 + TypeScript + Vite | Performance de build com HMR, tipagem estática para segurança, ecossistema maduro |
+| Biblioteca de Auth | AWS Amplify Auth v6 | Abstração oficial da AWS para Cognito, gerenciamento automático de tokens, suporte nativo a SRP |
+| Roteamento | React Router v6 | Padrão de mercado para SPAs React, suporte a rotas protegidas e lazy loading |
+| Estilização | CSS Modules | Escopo local automático, sem overhead de runtime, compatibilidade nativa com Vite |
+| Estado de Auth | React Context + useReducer | Suficiente para estado de autenticação sem complexidade de Redux |
+| Backend | Lambda monolítica | Simplicidade para 3 endpoints, cold start compartilhado, deploy atômico |
+| Tipo de API | API Gateway REST | Suporte nativo a Cognito Authorizer, deploy por stages, integração Lambda Proxy |
+| Hospedagem Frontend | S3 privado + CloudFront + OAC | Segurança máxima, HTTPS obrigatório, CDN global com baixa latência |
+| Testes | Vitest | Compatível nativamente com Vite, rápido, API similar ao Jest |
 
-### Etapas do Fluxo de Login
+### Por que REST API ao invés de HTTP API?
 
-1. **Submissão de credenciais:** O usuário informa email e senha no formulário de login
-2. **Chamada ao Amplify:** O frontend invoca `signIn(email, password)` do Amplify Auth
-3. **Negociação SRP:** O Amplify executa o protocolo SRP com o Cognito (InitiateAuth + RespondToAuthChallenge)
-4. **Emissão de tokens:** O Cognito retorna três tokens: ID Token, Access Token e Refresh Token
-5. **Armazenamento de sessão:** O Amplify armazena os tokens de forma segura e retorna a sessão
-6. **Redirecionamento:** O frontend redireciona o usuário para a área autenticada
-7. **Chamada à API:** O frontend faz requisições à API incluindo o ID Token no header Authorization
-8. **Validação:** O Cognito Authorizer da API Gateway valida a assinatura e expiração do token
-9. **Processamento:** A Lambda recebe o evento com os claims do usuário e retorna os dados
+O API Gateway oferece dois tipos: REST API e HTTP API. A escolha foi REST API porque:
 
-### Diagrama de Sequência - Login
+1. **Cognito User Pool Authorizer nativo** — na REST API o authorizer valida o JWT sem código. Na HTTP API seria necessário usar JWT Authorizer com configuração manual
+2. **Stages com deploy explícito** — permite ter `dev` e `prod` com controle de versão
+3. **Custo:** para o volume deste projeto, a diferença de custo é insignificante
+
+### Por que Lambda monolítica ao invés de uma por rota?
+
+1. **Simplicidade** — apenas 3 endpoints, não justifica a complexidade de múltiplas Lambdas
+2. **Cold start** — com uma Lambda só, uma vez "quente", atende todos os paths
+3. **Deploy atômico** — um único ZIP garante consistência entre endpoints
+4. **Refatoração futura** — se o projeto crescer, migrar para Lambda por rota é simples
+
+---
+
+## Fluxo de Autenticação (Detalhado)
+
+### Login — Protocolo SRP passo a passo
+
+O SRP (Secure Remote Password) garante que a senha nunca é transmitida pela rede:
+
+1. **Submissão:** Usuário informa email + senha no formulário
+2. **Amplify Auth:** Frontend invoca `signIn(email, password)`
+3. **InitiateAuth:** Amplify envia `USER_SRP_AUTH` com o username para o Cognito
+4. **Challenge:** Cognito retorna `PASSWORD_VERIFIER` challenge com salt e SRP_B
+5. **RespondToAuthChallenge:** Amplify calcula a prova criptográfica localmente e responde
+6. **Tokens emitidos:** Cognito valida e retorna ID Token, Access Token e Refresh Token
+7. **Sessão salva:** Amplify armazena tokens internamente
+8. **Redirecionamento:** Frontend redireciona para `/dashboard`
 
 ```mermaid
 sequenceDiagram
@@ -148,61 +135,26 @@ sequenceDiagram
     participant C as Cognito User Pool
     participant API as API Gateway
     participant L as Lambda
-    U->>F: Submete credenciais
+
+    U->>F: Submete email + senha
     F->>A: signIn(email, password)
-    A->>C: InitiateAuth (SRP)
+    A->>C: InitiateAuth (USER_SRP_AUTH)
+    C-->>A: Challenge (PASSWORD_VERIFIER, salt, SRP_B)
+    A->>A: Calcula prova criptográfica (SRP)
+    A->>C: RespondToAuthChallenge (prova)
     C-->>A: Tokens (ID, Access, Refresh)
     A-->>F: AuthSession
-    F->>F: Redireciona para área autenticada
+    F->>F: Redireciona para /dashboard
+
     F->>API: GET /me (Authorization: Bearer ID_Token)
-    API->>C: Valida Token JWT
-    C-->>API: Token válido
-    API->>L: Evento Lambda Proxy
-    L-->>API: Dados do usuário
+    API->>C: Valida assinatura + expiração do JWT
+    C-->>API: Token válido + claims
+    API->>L: Evento Lambda Proxy (com claims)
+    L-->>API: { sub, email, name, preferred_username }
     API-->>F: JSON response
 ```
 
-### Tokens JWT
-
-| Token | Finalidade | Tempo de Vida |
-|-------|-----------|---------------|
-| ID Token | Identifica o usuário (claims: sub, email, name, preferred_username) | 1 hora (padrão Cognito) |
-| Access Token | Autoriza operações no User Pool | 1 hora (padrão Cognito) |
-| Refresh Token | Obtém novos tokens sem re-autenticação | 30 dias (padrão Cognito) |
-
----
-
-## Decisões de Design
-
-| Decisão | Escolha | Justificativa |
-|---------|---------|---------------|
-| Framework Frontend | React 18 + TypeScript + Vite | Performance de build com HMR, tipagem estática para segurança, ecossistema maduro com ampla comunidade |
-| Biblioteca de Autenticação | AWS Amplify Auth v6 | Abstração oficial da AWS para Cognito, gerenciamento automático de tokens e renovação, suporte nativo a SRP |
-| Roteamento | React Router v6 | Padrão de mercado para SPAs React, suporte robusto a rotas protegidas, lazy loading e navegação programática |
-| Estilização | CSS Modules | Escopo local automático (evita conflitos), sem overhead de runtime (diferente de CSS-in-JS), compatibilidade nativa com Vite |
-| Estado de Autenticação | React Context + useReducer | Simplicidade sem dependências externas (Redux não necessário), suficiente para estado global de autenticação |
-| Backend | Lambda única (monolítica) | Simplicidade para apenas 3 endpoints, cold start compartilhado, deploy atômico, facilita manutenção neste estágio do projeto |
-| Tipo de API | API Gateway REST (Regional) | Suporte nativo a Cognito User Pool Authorizer (sem código adicional), deploy por stages (dev/prod), integração direta com Lambda Proxy |
-| Hospedagem Frontend | S3 privado + CloudFront + OAC | Segurança (sem acesso público direto ao bucket), HTTPS obrigatório, distribuição global com baixa latência, custo reduzido para conteúdo estático |
-
----
-
-## Fluxo de Registro
-
-O registro de um novo usuário segue um fluxo em duas etapas: criação da conta e confirmação do email via código de verificação.
-
-### Etapas do Fluxo de Registro
-
-1. **Preenchimento do formulário:** O usuário informa nome completo, apelido, email e senha
-2. **Validação local:** O frontend valida formato do email, complexidade da senha e match das senhas
-3. **Criação da conta:** O Amplify invoca `signUp` no Cognito com os atributos do usuário
-4. **Envio do código:** O Cognito envia um código de verificação de 6 dígitos para o email informado
-5. **Redirecionamento:** O frontend redireciona para a tela de confirmação de código
-6. **Inserção do código:** O usuário digita o código recebido por email
-7. **Confirmação:** O Amplify invoca `confirmSignUp` no Cognito para validar o código
-8. **Ativação:** A conta é ativada e o usuário é redirecionado para o login com mensagem de sucesso
-
-### Diagrama de Sequência - Registro
+### Registro — Fluxo completo com confirmação
 
 ```mermaid
 sequenceDiagram
@@ -211,63 +163,137 @@ sequenceDiagram
     participant A as Amplify Auth
     participant C as Cognito User Pool
 
-    U->>F: Preenche formulário de registro
-    F->>F: Validação local (email, senha, campos)
-    F->>A: signUp(email, password, attributes)
-    A->>C: SignUp (name, email, preferred_username)
-    C-->>C: Envia código de verificação por email
-    C-->>A: Sucesso - aguarda confirmação
-    A-->>F: Registro pendente de confirmação
-    F->>F: Redireciona para tela de confirmação
-    U->>F: Insere código de 6 dígitos
+    U->>F: Preenche formulário (nome, apelido, email, senha)
+    F->>F: Validação local (email válido, senha forte, senhas iguais)
+    F->>A: signUp(email, password, { name, preferred_username })
+    A->>C: SignUp
+    C-->>C: Cria usuário com status UNCONFIRMED
+    C-->>C: Envia código de 6 dígitos por email
+    C-->>A: Sucesso - nextStep: CONFIRM_SIGN_UP
+    A-->>F: Registro pendente
+    F->>F: Redireciona para /confirm-email
+
+    U->>F: Digita código de 6 dígitos
     F->>A: confirmSignUp(email, code)
     A->>C: ConfirmSignUp
-    C-->>A: Conta confirmada
-    A-->>F: Sucesso
-    F->>F: Redireciona para login com mensagem de sucesso
+    C-->>C: Muda status para CONFIRMED
+    C-->>A: Sucesso
+    A-->>F: Conta confirmada
+    F->>F: Redireciona para /login com toast de sucesso
 ```
 
 ### Reenvio de Código
 
-Caso o usuário não receba ou perca o código de verificação, a tela de confirmação oferece a opção "Reenviar código", que solicita ao Cognito o envio de um novo código para o email cadastrado.
+Se o usuário não recebeu o código:
+
+1. Clica em "Reenviar código" na tela de confirmação
+2. Frontend invoca `resendSignUpCode(email)` via Amplify
+3. Cognito envia novo código de 6 dígitos
+4. Código anterior é invalidado
+
+### Recuperação de Senha (2 etapas)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant F as Frontend
+    participant A as Amplify Auth
+    participant C as Cognito
+
+    Note over U,C: Etapa 1 - Solicitar código
+    U->>F: Informa email
+    F->>A: resetPassword(email)
+    A->>C: ForgotPassword
+    C-->>U: Envia código por email
+    C-->>A: CodeDeliveryDetails
+    A-->>F: nextStep: CONFIRM_RESET_PASSWORD_WITH_CODE
+
+    Note over U,C: Etapa 2 - Nova senha
+    U->>F: Informa código + nova senha
+    F->>A: confirmResetPassword(email, code, newPassword)
+    A->>C: ConfirmForgotPassword
+    C-->>C: Atualiza senha do usuário
+    C-->>A: Sucesso
+    A-->>F: Senha alterada
+    F->>F: Redireciona para /login
+```
 
 ---
 
-## Estrutura de Diretórios
+## Comunicação Frontend ↔ API (Detalhes)
 
+### Como o token é enviado
+
+O `apiService.ts` implementa um cliente HTTP que:
+
+1. Obtém o ID Token atual via `fetchAuthSession()` do Amplify
+2. Adiciona o header `Authorization: Bearer <idToken>` em toda requisição
+3. Se o token estiver expirado, o Amplify renova automaticamente via Refresh Token
+4. Em caso de 401 (token inválido/expirado sem refresh), redireciona para login
+
+### Validação pelo Cognito Authorizer
+
+O Authorizer configurado no API Gateway:
+
+1. Extrai o token do header `Authorization`
+2. Verifica a assinatura usando as chaves públicas (JWKS) do User Pool
+3. Verifica se `iss` corresponde ao User Pool correto
+4. Verifica se `exp` (expiração) não passou
+5. Verifica se `token_use` é `id` (ID Token)
+6. Se válido, injeta os claims no `event.requestContext.authorizer.claims`
+
+### Claims disponíveis na Lambda
+
+Após validação, a Lambda recebe em `event.requestContext.authorizer.claims`:
+
+```json
+{
+  "sub": "uuid-do-usuario",
+  "email": "usuario@email.com",
+  "name": "Nome Completo",
+  "preferred_username": "apelido",
+  "email_verified": "true",
+  "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_XXXXX",
+  "aud": "app-client-id",
+  "token_use": "id",
+  "auth_time": "1234567890",
+  "exp": "1234571490"
+}
 ```
-AWS-Cognito/
-├── src/                          # Código-fonte do frontend
-│   ├── components/               # Componentes reutilizáveis
-│   │   ├── LoadingSpinner/       # Indicador de carregamento
-│   │   ├── PasswordInput/        # Input com toggle de visibilidade
-│   │   ├── PrivateRoute/         # Wrapper para rotas protegidas
-│   │   ├── PublicRoute/          # Redirect para usuários autenticados
-│   │   └── ErrorMessage/         # Exibição padronizada de erros
-│   ├── pages/                    # Páginas da aplicação
-│   │   ├── HomePage/             # Página inicial (tema dinossauro)
-│   │   ├── LoginPage/            # Tela de login
-│   │   ├── RegisterPage/         # Tela de registro
-│   │   ├── ConfirmEmailPage/     # Confirmação de código
-│   │   ├── ForgotPasswordPage/   # Recuperação de senha
-│   │   ├── DashboardPage/        # Área autenticada
-│   │   └── ProfilePage/          # Perfil do usuário
-│   ├── routes/                   # Configuração de rotas
-│   ├── services/                 # Serviços (auth, API)
-│   ├── contexts/                 # React Contexts
-│   ├── hooks/                    # Custom hooks
-│   ├── utils/                    # Utilitários (validação, erros)
-│   ├── styles/                   # Estilos globais
-│   └── assets/                   # Imagens e assets
-├── backend/                      # Código-fonte da Lambda
-│   ├── src/
-│   │   ├── index.ts              # Handler principal
-│   │   ├── routes/               # Rotas (health, me, gameStatus)
-│   │   ├── utils/                # Utilitários (CORS, response, logger)
-│   │   └── types/                # Tipos TypeScript
-│   ├── package.json
-│   └── tsconfig.json
-├── ARQUITETURA.md                # Este documento
-├── IMPLANTACAO-AWS.md            # Guia de deploy na AWS
-└── README.md                     # Documentação principal
-```
+
+---
+
+## Segurança — Detalhes Técnicos
+
+### CORS (Cross-Origin Resource Sharing)
+
+O backend (`cors.ts`) implementa validação de origens:
+
+- **Origens permitidas:** `http://localhost:5173` (dev), URL do CloudFront (prod)
+- **Headers permitidos:** Content-Type, Authorization
+- **Métodos:** GET, POST, PUT, DELETE, OPTIONS
+- **Preflight:** OPTIONS retorna headers CORS sem passar pelo Authorizer
+
+### Sanitização de Logs
+
+O `logger.ts` no backend mascara automaticamente:
+
+- Tokens JWT (mostra apenas primeiros/últimos caracteres)
+- Headers de Authorization
+- Dados sensíveis do evento
+
+### Respostas de Erro
+
+A Lambda nunca expõe:
+- Stack traces
+- Mensagens internas de erro
+- Nomes de variáveis ou paths internos
+
+Erros retornam mensagens genéricas como `"Erro interno do servidor"` com status 500.
+
+---
+
+## Referências
+
+- [README.md](./README.md) — Visão geral do projeto, infraestrutura e estrutura de diretórios
+- [IMPLANTACAO-AWS.md](./IMPLANTACAO-AWS.md) — Guia passo a passo para deploy na AWS

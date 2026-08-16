@@ -1,4 +1,4 @@
-# Guia de Implantação AWS
+# Implantação (Dino Login + Amazon cognito) - Parte 1-3
 
 Guia passo a passo para configuração manual dos serviços AWS necessários para a aplicação de login customizado com Cognito.
 
