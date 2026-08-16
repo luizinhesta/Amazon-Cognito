@@ -188,7 +188,7 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
    - **Tipo de endpoint da API**: **Regional**
 5. Clique em **Criar API**
 
-> **Nome sugerido para a API:** `dino-login-api`
+> **Nome sugerido para a API::** `dino-login-api`
 
 ### Criar Autorizador do Cognito
 
