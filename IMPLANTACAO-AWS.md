@@ -110,6 +110,10 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 - **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — campo "ID do grupo de usuários" na seção "Informações do grupo de usuários"
 - **ID do cliente de aplicação** — em **Aplicações** > **Clientes da aplicação**, clique no app e copie o "ID do cliente"
 
+![Objeto](imagens/imagem(9).png)
+![Objeto](imagens/imagem(10).png)
+![Objeto](imagens/imagem(11).png)
+
 ---
 
 ## Etapa 2: Criar Função Lambda
@@ -168,6 +172,8 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 19. Ajuste o **Tempo limite** para **10 segundos** (suficiente para a aplicação)
 20. Clique em **Salvar**
 
+![Objeto](imagens/imagem(1).png)
+![Objeto](imagens/imagem(2).png)
 ---
 
 ## Etapa 3: Configurar API Gateway
@@ -291,6 +297,9 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 
 42. Após a implantação, anote a **URL de invocação** exibida (formato: `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev`)
     - Esta URL será usada na variável de ambiente `VITE_API_URL` do frontend
+
+![Objeto](imagens/imagem(12).png)
+![Objeto](imagens/imagem(13).png)
 
 ---
 
@@ -417,6 +426,9 @@ Esta etapa é opcional. A aplicação funciona perfeitamente com a URL padrão d
     - **Rotear tráfego para**: **Alias para distribuição do CloudFront**
     - Selecione a distribuição CloudFront
 18. Clique em **Criar registros**
+
+![Objeto](imagens/imagem(7).png)
+![Objeto](imagens/imagem(8).png)
 
 ### Atualizar origens CORS
 
@@ -566,18 +578,6 @@ Deve retornar:
 {"status":"ok","message":"API funcionando corretamente"}
 ```
 
-### Solução de Problemas
-
-| Problema | Possível causa | Solução |
-|----------|---------------|---------|
-| `npm` não é reconhecido | Node.js não instalado | Instale o Node.js (seção Pré-requisitos) e reinicie o terminal |
-| Erro no `Compress-Archive` | Executando de dentro da pasta `dist/` | Execute o comando a partir da pasta `backend/` usando caminhos completos |
-| Página em branco no CloudFront | Objeto raiz padrão não configurado | Verifique se `index.html` está definido como Objeto raiz padrão |
-| Página em branco (variáveis undefined) | Arquivo `.env` não existe | Crie o `.env` a partir do `.env.example` com valores reais e refaça o build |
-| Erro 403 ao acessar rota direta | Resposta de erro personalizada não configurada | Configure respostas para erros 403 e 404 conforme Etapa 5 |
-| Erro de CORS no console | Origem não adicionada na Lambda | Atualize `ALLOWED_ORIGINS` com a URL correta (CloudFront + domínio) |
-| 401 na API | Token expirado ou Autorizador mal configurado | Verifique se a Origem do token está como `method.request.header.Authorization` |
-| Erro "Invalid token source" no Autorizador | Campo "Origem do token" com ponto solto | Certifique-se que está `method.request.header.Authorization` (sem ponto extra) |
-| Arquivos errados no S3 | Upload do backend em vez do frontend | O S3 recebe apenas `C:\...\dist\` (index.html + assets/). O `backend\dist\` vai para a Lambda via ZIP |
-| Certificado não validando | Registros CNAME não propagados | Aguarde propagação DNS (até 48h) ou verifique registros |
-| Usuário não aparece no Cognito | Registro falhou silenciosamente | Verifique o console do navegador (F12) para erros e confirme que o Client ID está correto |
+![Objeto](imagens/imagem(3).png)
+![Objeto](imagens/imagem(4).png)
+![Objeto](imagens/imagem(5).png)
