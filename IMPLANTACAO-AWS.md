@@ -110,9 +110,9 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 - **ID do grupo de usuários** (formato: `us-east-1_XXXXXXXXX`) — campo "ID do grupo de usuários" na seção "Informações do grupo de usuários"
 - **ID do cliente de aplicação** — em **Aplicações** > **Clientes da aplicação**, clique no app e copie o "ID do cliente"
 
-![Objeto](imagens/imagem(9).png)
-![Objeto](imagens/imagem(10).png)
-![Objeto](imagens/imagem(11).png)
+![Objeto](./imagens/imagem(9).png)
+![Objeto](./imagens/imagem(10).png)
+![Objeto](./imagens/imagem(11).png)
 
 ---
 
@@ -172,8 +172,8 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 19. Ajuste o **Tempo limite** para **10 segundos** (suficiente para a aplicação)
 20. Clique em **Salvar**
 
-![Objeto](imagens/imagem(1).png)
-![Objeto](imagens/imagem(2).png)
+![Objeto](./imagens/imagem(1).png)
+![Objeto](./imagens/imagem(2).png)
 ---
 
 ## Etapa 3: Configurar API Gateway
@@ -298,8 +298,8 @@ Na página **Visão geral** do grupo de usuários (acessível pelo menu lateral)
 42. Após a implantação, anote a **URL de invocação** exibida (formato: `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev`)
     - Esta URL será usada na variável de ambiente `VITE_API_URL` do frontend
 
-![Objeto](imagens/imagem(12).png)
-![Objeto](imagens/imagem(13).png)
+![Objeto](./imagens/imagem(12).png)
+![Objeto](./imagens/imagem(13).png)
 
 ---
 
@@ -427,8 +427,8 @@ Esta etapa é opcional. A aplicação funciona perfeitamente com a URL padrão d
     - Selecione a distribuição CloudFront
 18. Clique em **Criar registros**
 
-![Objeto](imagens/imagem(7).png)
-![Objeto](imagens/imagem(8).png)
+![Objeto](./imagens/imagem(7).png)
+![Objeto](./imagens/imagem(8).png)
 
 ### Atualizar origens CORS
 
@@ -578,6 +578,6 @@ Deve retornar:
 {"status":"ok","message":"API funcionando corretamente"}
 ```
 
-![Objeto](imagens/imagem(3).png)
-![Objeto](imagens/imagem(4).png)
-![Objeto](imagens/imagem(5).png)
+![Objeto](./imagens/imagem(3).png)
+![Objeto](./imagens/imagem(4).png)
+![Objeto](./imagens/imagem(5).png)
