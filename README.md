@@ -6,6 +6,8 @@ Este projeto é o **Projeto 1** de uma série de laboratórios práticos com ser
 
 A aplicação permite que usuários se cadastrem, confirmem o email, façam login, recuperem senha e gerenciem seu perfil — tudo através de telas React personalizadas que se comunicam diretamente com o Cognito via AWS Amplify.
 
+![Objeto](./Imagens/imagem(20).png)
+
 ### O que o Dino Login demonstra
 
 - Registro de usuários com validação de email
@@ -50,6 +52,8 @@ graph TB
     APIGW -->|Lambda Proxy| Lambda
 ```
 
+![Objeto](./Imagens/imagem(21).png)
+
 ---
 
 ## Resumo da Infraestrutura
@@ -93,6 +97,8 @@ graph TB
 | **Amazon Route 53** | DNS para resolver o domínio customizado para o CloudFront |
 | **AWS IAM** | Permissões mínimas para a Lambda (princípio do menor privilégio) |
 
+![Objeto](./Imagens/imagem(22).png)
+
 ---
 
 ## Acesso dos Usuários
@@ -104,6 +110,8 @@ O usuário acessa a aplicação através de um navegador web. O fluxo de acesso 
 3. Para se autenticar, o frontend se comunica diretamente com o Cognito via Amplify Auth
 4. Após login, o frontend obtém tokens JWT para acessar a API protegida
 5. A API Gateway valida o token automaticamente antes de repassar à Lambda
+
+![Objeto](./Imagens/imagem(23).png)
 
 ### Fluxo de Cadastro e Login
 
@@ -131,6 +139,8 @@ sequenceDiagram
     F->>F: Redireciona para área autenticada
 ```
 
+![Objeto](./Imagens/imagem(27).png)
+
 ---
 
 ## DNS e Segurança
@@ -141,6 +151,8 @@ sequenceDiagram
 2. O CloudFront serve os arquivos estáticos do **S3** via HTTPS
 3. O certificado SSL é gerenciado pelo **ACM** (AWS Certificate Manager)
 4. O bucket S3 é **privado** — ninguém acessa diretamente, só o CloudFront via Origin Access Control (OAC)
+
+![Objeto](./Imagens/imagem(24).png)
 
 ### Proteção da API
 
@@ -155,6 +167,8 @@ sequenceDiagram
 | ID Token | Identifica o usuário (claims: sub, email, name, preferred_username) | 1 hora |
 | Access Token | Autoriza operações no User Pool | 1 hora |
 | Refresh Token | Obtém novos tokens sem re-autenticação | 30 dias |
+
+![Objeto](./Imagens/imagem(25).png)
 
 ---
 
@@ -217,6 +231,8 @@ Navegador → API Gateway → Cognito Authorizer (valida JWT) → Lambda → Res
 5. A Lambda roteia internamente (`/health`, `/me`, `/game/status`) e retorna JSON
 6. A resposta volta pelo API Gateway até o navegador
 
+![Objeto](./Imagens/imagem(26).png)
+
 ---
 
 ## Conceitos Demonstrados
@@ -233,6 +249,8 @@ Este projeto demonstra na prática os seguintes conceitos:
 - **Protocolo SRP** — autenticação segura sem transmitir senha em texto plano
 - **Origin Access Control (OAC)** — acesso ao S3 exclusivamente via CloudFront
 - **IAM com menor privilégio** — permissões mínimas necessárias para a Lambda
+
+![Objeto](./Imagens/imagem(22).png)
 
 ---
 
@@ -312,3 +330,5 @@ Amazon-Cognito/
 
 - [IMPLANTACAO-AWS.md](./IMPLANTACAO-AWS.md) — Guia completo de implantação na AWS (Cognito, Lambda, API Gateway, S3, CloudFront, domínio customizado)
 - [ARQUITETURA.md](./ARQUITETURA.md) — Detalhes técnicos, decisões de design e diagramas de sequência
+
+![Objeto](./Imagens/imagem(28).png)
